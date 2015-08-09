@@ -15,10 +15,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
 
 		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+		<link rel="stylesheet" href="css/theme/white.css" id="theme">
 
 		<!-- Code syntax highlighting -->
-		<link rel="stylesheet" href="lib/css/solarized_light.css">
+		<link rel="stylesheet" href="lib/css/zenburn.css">
 
 		<!-- Printing and PDF exports -->
 		<script>
@@ -291,7 +291,8 @@ print(rec_count.inventory_count)
           <section>
             <h2>filter_by</h2>
             <pre><code data-trim>
-record = session.query(Cookie).filter_by(cookie_name='chocolate chip').first()
+record = session.query(Cookie). \
+             filter_by(cookie_name='chocolate chip').first()
 print(record)
 
 Cookie(cookie_name='chocolate chip',
@@ -302,14 +303,16 @@ Cookie(cookie_name='chocolate chip',
           <section>
             <h2>filter</h2>
             <pre><code data-trim>
-record = session.query(Cookie).filter(Cookie.cookie_name == 'chocolate chip').first()
+record = session.query(Cookie). \
+             filter(Cookie.cookie_name == 'chocolate chip').first()
 print(record)
             </code></pre>
           </section>
           <section>
             <h2>ClauseElements</h2>
             <pre><code data-trim>
-query = session.query(Cookie).filter(Cookie.cookie_name.like('%chocolate%'))
+query = session.query(Cookie).filter(
+            Cookie.cookie_name.like('%chocolate%'))
 for record in query:
     print(record.cookie_name)
 
@@ -320,7 +323,6 @@ chocolate chip
             <h2>ClauseElement Methods</h2>
             <ul>
               <li>between(cleft, cright) - Find where the column is between cleft and cright</li>
-              <li>concat(column_two) - Concatenate column with column_two</li>
               <li>distinct() - Find only unique values for column</li>
               <li>in_([list]) - Find where the column is in the list</li>
               <li>is_(None) - Find where the column is None (commonly used for Null checks with None)</li>
@@ -371,7 +373,9 @@ peanut butter
             <pre><code data-trim>
 query = session.query(Cookie)
 cc_cookie = query.filter(Cookie.cookie_name == "chocolate chip").first()
+
 cc_cookie.quantity = cc_cookie.quantity + 120
+
 session.commit()
 print(cc_cookie.quantity)
 
