@@ -42,765 +42,510 @@
 			<div class="slides">
         <section>
           <section>
-            <h1>Filling the Flask</h1>
+            <h1>Introduction to SQLALchemy ORM</h1>
             <p>
               <small>Created by <a href="http://www.jasonamyers.com">Jason A Myers</a> / <a href="http://twitter.com/jasonamyers">@jasonamyers</a></small>
             </p>
           </section>
           <section>
-            <img src="dangerous.jpg" />
+            <h1>WARNING!</h1>
+            <img data-src="adict.gif" />
           </section>
           <section>
-            <img src="full_hearts.jpg" />
-            <aside class="notes">
-              I know what your thinking... "I'm awesome and I got full hearts.
-            </aside>
-          </section>
-          <section>
-            <img src="ocarina.png" />
-            <aside class="notes">
-              I mean I beat ocarina of time without the ocarina"
-            </aside>
+            <h2>SQLAlchemy</h2>
+            <p>
+              <ul>
+                <li>Core - Schema centric</li>
+                <li>ORM - User Model</li>
+              </ul>
+            </p>
           </section>
         </section>
         <section>
           <section>
-            <img height=500 src="flask-empty.jpg" />
+            <h2>Installing</h2>
+            <p>pip install sqlalchemy</p>
           </section>
           <section>
-            <h2>Our Empty Flask</h2>
-            <p>I have two files setup: flaskfilled/__init__.py and config.py</p>
+            <h2>Connecting and Establishing a Session</h2>
+            <img src="data.png" />
           </section>
           <section>
-            <h2>__init__.py</h2>
+            <h2>Connecting</h2>
             <pre><code data-trim>
-from flask import Flask
+from sqlalchemy import create_engine
 
-from config import config
-
-
-def create_app(config_name):
-    app = Flask(__name__)
-    app.config.from_object(config[config_name])
-    return app
+engine = create_engine('sqlite:///:memory:')
             </code></pre>
           </section>
           <section>
-            <h2>config.py</h2>
+            <h2>Establishing a Session</h2>
             <pre><code data-trim>
-import os
+from sqlalchemy.orm import sessionmaker
 
+Session = sessionmaker(bind=engine)
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-
-class Config:
-    SECRET_KEY = 'development key'
-    ADMINS = frozenset(['jason@jasonamyers.com', ])
-
-
-class DevelopmentConfig(Config):
-    DEBUG = True
-
-
-config = {
-    'development': DevelopmentConfig,
-    'default': DevelopmentConfig
-}
-
+session = Session()
             </code></pre>
           </section>
         </section>
 				<section>
 					<section>
-						<h2>Management Commands</h2>
-            <img height=500 src="link_hope.jpg" />
+						<h2>Defining Models</h2>
+            <img height=500 src="store.jpg" />
 					</section>
 					<section>
-						<h2>flask-script</h2>
-            <p>Commands for running a development server, a customised Python shell, etc</p>
-            <pre><code>pip install flask-script</code></pre>
+						<h2>Model Base</h2>
+            <p>Declarative Base</p>
+            <pre><code>
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+            </code></pre>
 					</section>
 					<section>
-						<h2>manage.py</h2>
+						<h2>Cookie Model</h2>
             <pre><code data-trim>
-#! /usr/bin/env python
-import os
+from sqlalchemy import Column, Integer, Numeric, String
 
-from flask.ext.script import Manager
-
-from flaskfilled import create_app
-
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
-manager = Manager(app)
-
-if __name__ == '__main__':
-    manager.run()
-            </code></pre>
-					</section>
-          <section>
-            <h2>Shell with Context</h2>
-            <pre><code data-trim>
-from flask.ext.script import Shell
-
-def make_shell_context():
-    return dict(app=app)
-
-manager.add_command('shell', Shell(make_context=make_shell_context))
-            </code></pre>
-          </section>
-          <section>
-            <pre><code data-trim>
-$ python manage.py
-usage: manage.py [-?] {runserver,shell} ...
-
-positional arguments:
-  {runserver,shell}
-    runserver        Runs the Flask development server i.e. app.run()
-    shell            Runs a Python shell inside Flask application context.
-
-optional arguments:
-  -?, --help         show this help message and exit
-            </code></pre>
-          </section>
-          <section>
-            <pre><code data-trim>
-$ python manage.py shell
-
-In [1]: app.config['DEBUG']
-Out[1]: True
-            </code></pre>
-          </section>
-        </section>
-
-        <section>
-          <section>
-            <h2>Database Access</h2>
-            <img height=500 src="take.png" />
-          </section>
-          <section>
-            <h2>flask-SQLAlchemy</h2>
-            <p>
-            <ul>
-              <li>Single wrapper for most of SQLAlchemy</li>
-              <li>Preconfigured scope session</li>
-              <li>Sessions are tied to the page lifecycle</li>
-            </ul>
-            <pre><code data-trim>pip install flask-sqlalchemy</code></pre>
-          </section>
-          <section>
-            <h2>__init__.py</h2>
-            <pre><code data-trim>
-from flask.ext.sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
-def create_app(config_name):
-    app = Flask(__name__)
-    app.config.from_object(config[config_name])
-
-    db.init_app(app)
-    return app
-            </code></pre>
-          </section>
-          <section>
-            <h2>config.py</h2>
-            <pre><code data-trim>
-class DevelopmentConfig(Config):
-    DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "sqlite:////tmp/dev.db"
-            </code></pre>
-          </section>
-          <section>
-            <h2>flaskfilled/models.py</h2>
-            <pre><code data-trim>
-from flaskfilled import db
-
-
-class Cookie(db.Model):
+class Cookie(Base):
     __tablename__ = 'cookies'
 
-    cookie_id = db.Column(db.Integer(), primary_key=True)
-    cookie_name = db.Column(db.String(50), index=True)
-    cookie_recipe_url = db.Column(db.String(255))
-    quantity = db.Column(db.Integer())
+    cookie_id = Column(Integer, primary_key=True)
+    cookie_name = Column(String(50), index=True)
+    cookie_recipe_url = Column(String(255))
+    cookie_sku = Column(String(55))
+    quantity = Column(Integer())
+    unit_cost = Column(Numeric(12, 2))
+            </code></pre>
+					</section>
+          <section>
+            <h2>Persisting our Table</h2>
+            <pre><code data-trim>
+Base.metadata.create_all(engine)
+            </code></pre>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>Inserting Data</h2>
+            <img data-src="insert.gif" />
+          </section>
+          <section>
+            <h2>Adding a Cookie</h2>
+            <pre><code data-trim>
+cc_cookie = Cookie(cookie_name='chocolate chip',
+                   cookie_recipe_url='http://some.aweso.me/cookie/recipe.html',
+                   cookie_sku='CC01',
+                   quantity=12,
+                   unit_cost=0.50)
             </code></pre>
           </section>
           <section>
-            <h2>manage.py</h2>
+            <h2>Adding to Session</h2>
             <pre><code data-trim>
-from flask.ext.script import Command
-
-from flaskfilled import db
-from flaskfilled.models import Cookies
-
-def make_shell_context():
-    return dict(app=app, db=db)
-
-
-class DevDbInit(Command):
-    '''Creates database tables from sqlalchemy models'''
-
-    def __init__(self, db):
-        self.db = db
-
-    def run(self):
-        self.db.create_all()
+session.add(cc_cookie)
+session.commit()
             </code></pre>
           </section>
           <section>
+            <h2>Accessing Attributes</h2>
             <pre><code data-trim>
-$ python manage.py db_init
-$ python manage.py shell
+print(cc_cookie.cookie_id)
 
-In [1]: db.metadata.tables
-Out[1]: immutabledict({'cookies': Table('cookies', 'stuff')})
-
-In [2]: from flaskfilled.models import Cookie
+1
             </code></pre>
           </section>
           <section>
+            <h2>Bulk Inserts</h2>
             <pre><code data-trim>
-c = Cookie(cookie_name="Chocolate Chip",
-           cookie_recipe_url="http://zenofthecookie.com/chocolatechip.html",
-           quantity=2)
-db.session.add(c)
-db.session.commit()
+c1 = Cookie(cookie_name='peanut butter',
+            cookie_recipe_url='http://some.aweso.me/cookie/peanut.html',
+            cookie_sku='PB01',
+            quantity=24,
+            unit_cost=0.25)
+c2 = Cookie(cookie_name='oatmeal raisin',
+            cookie_recipe_url='http://some.okay.me/cookie/raisin.html',
+            cookie_sku='EWW01',
+            quantity=100,
+            unit_cost=1.00)
+session.bulk_save_objects([c1,c2])
+session.commit()
+            </code></pre>
+          </section>
+          <section>
+            <h2>Bulk Insert Differences</h2>
+            <pre><code data-trim>
+c1.cookie_id
             </code></pre>
           </section>
         </section>
         <section>
           <section>
-            <h2>Migrations</h2>
-            <img data-src="migration.png" />
+            <h2>Queries</h2>
+            <img data-src="question.jpg" />
           </section>
           <section>
-            <h2>flask-migrate</h2>
-            <p>Ties Alembic into flask-script!</p>
-            <pre><code data-trim>pip install flask-migrate</code></pre>
-          </section>
-          <section>
-            <h2>manage.py</h2>
+            <h2>All the COOKIES!</h2>
             <pre><code data-trim>
-from flask.ext.migrate import Migrate, MigrateCommand
+cookies = session.query(Cookie).all()
+print(cookies)
 
-migrate = Migrate(app, db)
-
-manager.add_command('db', MigrateCommand)
+[Cookie(cookie_name='chocolate chip',
+        cookie_recipe_url='http://some.aweso.me/cookie/recipe.html',
+        cookie_sku='CC01', quantity=12, unit_cost=0.50),
+ Cookie(cookie_name='peanut butter',
+        cookie_recipe_url='http://some.aweso.me/cookie/peanut.html',
+        cookie_sku='PB01', quantity=24, unit_cost=0.25),
+ Cookie(cookie_name='oatmeal raisin',
+        cookie_recipe_url='http://some.okay.me/cookie/raisin.html',
+        cookie_sku='EWW01', quantity=100, unit_cost=1.00)]
             </code></pre>
           </section>
           <section>
-            <h2>Initializing Alembic</h2>
-            <pre><code data-trim>$ python manage.py db init</code></pre>
-          </section>
-          <section>
-            <h2>Generating a migration</h2>
+            <h2>All the COOKIES! - Iterator</h2>
             <pre><code data-trim>
-$ python manage.py db migrate -m "initial migration"
-INFO  [alembic.migration] Context impl SQLiteImpl.
-INFO  [alembic.migration] Will assume non-transactional DDL.
-  Generating flask-filled/migrations/versions/586131216f6_initial_migration.py ... done
+cookies = session.query(Cookie).all()
+print(cookies)
+
+Cookie(cookie_name='chocolate chip',
+        cookie_recipe_url='http://some.aweso.me/cookie/recipe.html',
+        cookie_sku='CC01', quantity=12, unit_cost=0.50)
+Cookie(cookie_name='peanut butter',
+        cookie_recipe_url='http://some.aweso.me/cookie/peanut.html',
+        cookie_sku='PB01', quantity=24, unit_cost=0.25)
+Cookie(cookie_name='oatmeal raisin',
+        cookie_recipe_url='http://some.okay.me/cookie/raisin.html',
+        cookie_sku='EWW01', quantity=100, unit_cost=1.00)
             </code></pre>
           </section>
           <section>
-            <h2>Running migrations</h2>
+            <h2>Particular Attributes</h2>
             <pre><code data-trim>
-$ python manage.py db upgrade
-INFO  [alembic.migration] Context impl SQLiteImpl.
-INFO  [alembic.migration] Will assume non-transactional DDL.
-INFO  [alembic.migration] Running upgrade  -> 586131216f6, initial migration
+print(session.query(Cookie.cookie_name, Cookie.quantity).first())
+
+('chocolate chip', 12)
+            </code></pre>
+          </section>
+          <section>
+            <h2>Order by</h2>
+            <pre><code data-trim>
+for cookie in session.query(Cookie).order_by(Cookie.quantity):
+    print('{:3} - {}'.format(cookie.quantity, cookie.cookie_name))
+
+  12 - chocolate chip
+  24 - peanut butter
+ 100 - oatmeal raisin
+            </code></pre>
+          </section>
+          <section>
+            <h2>Decending</h2>
+            <pre><code data-trim>
+from sqlalchemy import desc
+for cookie in session.query(Cookie).order_by(desc(Cookie.quantity)):
+      print('{:3} - {}'.format(cookie.quantity, cookie.cookie_name))
+            </code></pre>
+          </section>
+          <section>
+            <h2>Limiting</h2>
+            <pre><code data-trim>
+query = session.query(Cookie).order_by(Cookie.quantity).limit(2)
+print([result.cookie_name for result in query])
+
+['chocolate chip', 'peanut butter']
+            </code></pre>
+          </section>
+          <section>
+            <h2>Database Functions</h2>
+            <pre><code data-trim>
+from sqlalchemy import func
+
+inv_count = session.query(func.sum(Cookie.quantity)).scalar()
+print(inv_count)
+
+136
+            </code></pre>
+          </section>
+          <section>
+            <h2>Database Functions Count</h2>
+            <pre><code data-trim>
+rec_count = session.query(func.count(Cookie.cookie_name)).first()
+print(rec_count)
+
+(3, 0)
+            </code></pre>
+          </section>
+          <section>
+            <h2>Labeling</h2>
+            <pre><code data-trim>
+rec_count = session.query(func.count(Cookie.cookie_name) \
+                          .label('inventory_count')).first()
+print(rec_count.keys())
+print(rec_count.inventory_count)
+
+['inventory_count']
+5
+            </code></pre>
+          </section>
+          <section>
+            <h2>filter_by</h2>
+            <pre><code data-trim>
+record = session.query(Cookie).filter_by(cookie_name='chocolate chip').first()
+print(record)
+
+Cookie(cookie_name='chocolate chip',
+       cookie_recipe_url='http://some.aweso.me/cookie/recipe.html',
+       cookie_sku='CC01', quantity=12, unit_cost=0.50)
+            </code></pre>
+          </section>
+          <section>
+            <h2>filter</h2>
+            <pre><code data-trim>
+record = session.query(Cookie).filter(Cookie.cookie_name == 'chocolate chip').first()
+print(record)
+            </code></pre>
+          </section>
+          <section>
+            <h2>ClauseElements</h2>
+            <pre><code data-trim>
+query = session.query(Cookie).filter(Cookie.cookie_name.like('%chocolate%'))
+for record in query:
+    print(record.cookie_name)
+
+chocolate chip
+            </code></pre>
+          </section>
+          <section>
+            <h2>ClauseElement Methods</h2>
+            <ul>
+              <li>between(cleft, cright) - Find where the column is between cleft and cright</li>
+              <li>concat(column_two) - Concatenate column with column_two</li>
+              <li>distinct() - Find only unique values for column</li>
+              <li>in_([list]) - Find where the column is in the list</li>
+              <li>is_(None) - Find where the column is None (commonly used for Null checks with None)</li>
+              <li>contains('string') - Find where the column has 'string' in it (Case-sensitive)</li>
+              <li>endswith('string') - Find where the column ends with 'string' (Case-sensitive)</li>
+              <li>startswith('string') - Find where the column begins with 'string' (Case-sensitive)</li>
+              <li>ilike('string') - Find where the column is like 'string' (NOT Case-sensitive)</li>
+            </ul>
+          </section>
+          <section>
+            <h2>Operators</h2>
+            <pre><code data-trim>
+from sqlalchemy import cast
+query = session.query(Cookie.cookie_name,
+                      cast((Cookie.quantity * Cookie.unit_cost),
+                           Numeric(12,2)).label('inv_cost'))
+for result in query:
+    print('{} - {}'.format(result.cookie_name, result.inv_cost))
+
+chocolate chip - 6.00
+peanut butter - 6.00
+oatmeal raisin - 100.00
+            </code></pre>
+          </section>
+          <section>
+            <h2>Conjunctions</h2>
+            <pre><code data-trim>
+from sqlalchemy import and_, or_, not_
+query = session.query(Cookie).filter(
+    or_(
+        Cookie.quantity.between(10, 50),
+        Cookie.cookie_name.contains('chip')
+    )
+)
+for result in query:
+    print(result.cookie_name)
+
+chocolate chip
+peanut butter
+            </code></pre>
+          </section>
+          <section>
+            <h2>Updating Cookies</h2>
+            <img data-src="update.gif" />
+          </section>
+          <section>
+            <h2>Updating Cookies</h2>
+            <pre><code data-trim>
+query = session.query(Cookie)
+cc_cookie = query.filter(Cookie.cookie_name == "chocolate chip").first()
+cc_cookie.quantity = cc_cookie.quantity + 120
+session.commit()
+print(cc_cookie.quantity)
+
+132
+            </code></pre>
+          </section>
+          <section>
+            <h2>Deleting Cookies</h2>
+            <img data-src="delete.jpg" />
+          </section>
+          <section>
+            <h2>Deleting Cookies</h2>
+            <pre><code data-trim>
+query = session.query(Cookie)
+query = query.filter(Cookie.cookie_name == "peanut butter")
+
+dcc_cookie = query.one()
+session.delete(dcc_cookie)
+session.commit()
+
+dcc_cookie = query.first()
+print(dcc_cookie)
+
+None
             </code></pre>
           </section>
         </section>
         <section>
           <section>
-            <h2>User Authentication</h2>
-            <img height=500 data-src="key.jpg" />
+            <h2>Okay time for a breather</h2>
+            <img data-src="breath.gif" />
           </section>
           <section>
-            <h2>Flask-Login</h2>
-            <p><ul>
-              <li>Simplifies logging users in and out</li>
-              <li>Secures view functions with decorators</li>
-              <li>Protects session cookies</li>
-            </ul></p>
-            <pre><code data-trim>pip install flask-login</code></pre>
+            <h2>Relationships</h2>
+            <img data-src="relate.jpg" />
           </section>
           <section>
-            <h2>flaskfilled/__init__.py</h2>
+            <h2>Imports</h2>
             <pre><code data-trim>
-from flask.ext.login import LoginManager
-
-login_manager = LoginManager()
-
-def create_app(config_name):
-    app = Flask(__name__)
-    app.config.from_object(config[config_name])
-
-    db.init_app(app)
-    login_manager.setup_app(app)
-
-    from .main import main as main_blueprint
-    app.register_blueprint(main_blueprint)
-
-    from .auth import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint, url_prefix='/auth')
-
-    return app
+from datetime import datetime
+from sqlalchemy import DateTime, ForeignKey, Boolean
+from sqlalchemy.orm import relationship, backref
             </code></pre>
           </section>
           <section>
-            <h2>models.py</h2>
+            <h2>User Model</h2>
             <pre><code data-trim>
-from werkzeug.security import generate_password_hash, check_password_hash
-
-from flaskfilled import login_manager
-
-class User(db.Model, UserMixin):
+class User(Base):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer(), primary_key=True)
-    username = db.Column(db.String, primary_key=True)
-    password = db.Column(db.String)
-    authenticated = db.Column(db.Boolean, default=False)
+    user_id = Column(Integer(), primary_key=True)
+    username = Column(String(15), nullable=False, unique=True)
+    email_address = Column(String(255), nullable=False)
+    phone = Column(String(20), nullable=False)
+    password = Column(String(25), nullable=False)
+    created_on = Column(DateTime(), default=datetime.now)
+    updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
             </code></pre>
           </section>
           <section>
-            <h2>User Model required methods</h2>
-            <h3>Provided by UserMixin</h3>
+            <h2>Order Model</h2>
             <pre><code data-trim>
-def is_active(self):
-    return True
+class Order(Base):
+    __tablename__ = 'orders'
 
-def get_id(self):
-    return self.id
+    order_id = Column(Integer(), primary_key=True)
+    user_id = Column(Integer(), ForeignKey('users.user_id'))
+    shipped = Column(Boolean(), default=False)
 
-def is_authenticated(self):
-    return self.authenticated
-
-def is_anonymous(self):
-    return False
+    user =  relationship("User", backref=backref('orders', order_by=order_id))
             </code></pre>
           </section>
           <section>
-            <h2>User model password handling</h2>
+            <h2>LineItem Model</h2>
             <pre><code data-trim>
-  @property
-  def password(self):
-      raise AttributeError('password is not a readable attribute')
+class LineItem(Base):
+    __tablename__ = 'line_items'
 
-  @password.setter
-  def password(self, password):
-      self.password_hash = generate_password_hash(password)
+    line_item_id = Column(Integer(), primary_key=True)
+    order_id = Column(Integer(), ForeignKey('orders.order_id'))
+    cookie_id = Column(Integer(), ForeignKey('cookies.cookie_id'))
+    quantity = Column(Integer())
+    extended_cost = Column(Numeric(12, 2))
 
-  def verify_password(self, password):
-      return check_password_hash(self.password_hash, password)
+    order = relationship("Order", backref=backref('line_items', order_by=line_item_id))
+    cookie = relationship("Cookie", uselist=False)
             </code></pre>
           </section>
           <section>
-            <h2>Setting up the Auth Blueprint</h2>
-            <h3>auth/__init__.py</h3>
+            <h2>Persist them</h2>
             <pre><code data-trim>
-from flask import Blueprint
-
-auth = Blueprint('auth', __name__)
-
-from . import views
+Base.metadata.create_all(engine)
             </code></pre>
           </section>
           <section>
-            <h2>auth/views.py</h2>
+            <h2>Defining a user</h2>
             <pre><code data-trim>
-from flask import render_template, redirect, request, url_for, flash
+cookiemon = User(username='cookiemon',
+                 email_address='mon@cookie.com',
+                 phone='111-111-1111',
+                 password='password')
 
-from flask.ext.login import login_user, logout_user, login_required
+session.add(cookiemon)
 
-from . import auth
-from flaskfilled.models import User
+session.commit()
             </code></pre>
           </section>
           <section>
-            <h2>login</h2>
+            <h2>Setting up an Order</h2>
             <pre><code data-trim>
-@auth.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username', '')
-        password = request.form.get('password', '')
-        user = User.query.filter_by(username=username).first()
-        if user is not None and user.verify_password(password):
-            login_user(user)
-            next = request.args.get('next')
-            return redirect(next or url_for('main.index'))
-        else:
-            flash('Wrong username or password.')
-    return render_template('auth/login.html')
+o1 = Order()
+o1.user = cookiemon
+session.add(o1)
             </code></pre>
           </section>
           <section>
-            <h2>logout</h2>
+            <h2>Preparing Line Items</h2>
             <pre><code data-trim>
-@auth.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('You have been logged out.')
-    return redirect(url_for('main.index'))
+cc = session.query(Cookie).filter(Cookie.cookie_name ==
+                                  "chocolate chip").one()
+line1 = LineItem(cookie=cc, quantity=2, extended_cost=1.00)
+
+pb = session.query(Cookie).filter(Cookie.cookie_name ==
+                                  "oatmeal raisin").one()
+line2 = LineItem(quantity=12, extended_cost=3.00)
+line2.cookie = pb
             </code></pre>
           </section>
           <section>
-            <h2>login template</h2>
+            <h2>Associate Order and Line Items</h2>
             <pre><code data-trim>
-{% extends "base.html" %}
+o1.line_items.append(line1)
+o1.line_items.append(line2)
 
-{% block title %}Login{% endblock %}
-
-{% block page_content %}
-<div class="page-header">
-    <h1>Login</h1>
-</div>
-<div class="col-md-4">
-    <form action="">
-    Username: <input type="text" name="username"><br>
-    Password: <input type="password" name="password"><br>
-    <input type="submit">
-    </form>
-    <br>
-    <p>Forgot your password? <a href="{{ url_for('auth.password_reset_request') }}">Click here to reset it</a>.</p>
-    <p>New user? <a href="{{ url_for('auth.register') }}">Click here to register</a>.</p>
-</div>
-{% endblock %}
+session.commit()
             </code></pre>
           </section>
           <section>
-            <h2>main/views.py</h2>
+            <h2>Using Relationships in Queries</h2>
             <pre><code data-trim>
-from flask import render_template
+query = session.query(Order.order_id, User.username, User.phone,
+                      Cookie.cookie_name, LineItem.quantity,
+                      LineItem.extended_cost)
+query = query.join(User).join(LineItem).join(Cookie)
+results = query.filter(User.username == 'cookiemon').all()
+print(results)
 
-from . import main
-
-
-@main.route('/', methods=['GET'])
-def index():
-    return render_template('main/index.html')
+[(1, 'cookiemon', '111-111-1111', 'chocolate chip', 2, Decimal('1.00')),
+ (1, 'cookiemon', '111-111-1111', 'oatmeal raisin', 12, Decimal('3.00'))]
             </code></pre>
           </section>
           <section>
-            <h2>index template</h2>
+            <h2>Another Example</h2>
             <pre><code data-trim>
-{% extends "base.html" %}
+query = session.query(User.username, func.count(Order.order_id))
+query = query.outerjoin(Order).group_by(User.username)
+for row in query:
+    print(row)
 
-{% block title %}The Index{% endblock %}
-
-{% block page_content %}
-{% if not current_user.is_authenticated() %}
-  <p><a href="{{ url_for('auth.login') }}">Click here to login</a>.</p>
-{% else %}
-  <p><a href="{{ url_for('auth.logout') }}">Click here to logout</a>.</p>
-{% endif %}
-{% endblock %}
-            </code></pre>
-          </section>
-          <section>
-            <h2>Create Users Migration and Apply it</h2>
-            <pre><code data-trim>
-$ python manage.py db migrate -m "User"
-  Generating /Users/jasonamyers/dev/flask-filled/migrations/versions/8d9327f04f_user.py ... done
-
-$ python manage.py db upgrade
-INFO  [alembic.migration] Running upgrade 586131216f6 -> 8d9327f04f, User
-            </code></pre>
-          </section>
-          <section>
-            <h2>Run Server</h2>
-            <pre><code data-trim>
-$ python manage.py runserver
-            </code></pre>
-          </section>
-          <section>
-            <img src=index.png />
-          </section>
-          <section>
-            <img src=login.png />
-          </section>
-          <section>
-            <img src=logged_in.png />
-          </section>
-          <section>
-            <img src=logged_out.png />
-          </section>
-          <section>
-            <img src=bad_auth.png />
-          </section>
-        </section>
-        <section>
-          <section>
-            <h2>Forms...</h2>
-            <img data-src="game_scroll_small.png" />
-          </section>
-          <section>
-            <h2>Flask-WTF</h2>
-            <p>
-            <ul>
-              <li>Validation</li>
-              <li>CSRF protection</li>
-              <li>File Uploads</li>
-            </ul>
-            <pre><code data-trim>pip install flask-wtf</code></pre>
-            </p>
-          </section>
-          <section>
-            <h2>auth/forms.py</h2>
-            <p><pre><code data-trim>
-from flask.ext.wtf import Form
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import Required, Length
-
-
-class LoginForm(Form):
-      username = StringField('username', validators=[Required(),
-                                                     Length(1, 64)])
-      password = PasswordField('Password', validators=[Required()])
-      submit = SubmitField('Log In')
-            </code></pre></p>
-          </section>
-          <section>
-            <h2>auth/views.py</h2>
-            <p><pre><code data-trim>
-@auth.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is not None and user.verify_password(form.password.data):
-            login_user(user)
-            next = request.args.get('next')
-            return redirect(next or url_for('main.index'))
-        else:
-            flash('Wrong username or password.')
-    return render_template('auth/login.html', form=form)
-            </code></pre></p>
-          </section>
-          <section>
-            <h2>templates/auth/login.html</h2>
-            <p><pre><code data-trim>
-{% block page_content %}
-<div class="col-md-4">
-    <form action="" method="POST">
-      {{ form.csrf_token }}
-      {% if form.csrf_token.errors %}
-        <div class="warning">You have submitted an invalid CSRF token</div>
-      {% endif %}
-      {{form.username.label }}: {{ form.username }}
-      {% if form.username.errors %}
-        {% for error in form.username.errors %}
-          {{ error }}
-        {% endfor %}
-        {% endif %}<br>
-      {{form.password.label }}: {{ form.password }}
-      {% if form.password.errors %}
-        {% for error in form.password.errors %}
-          {{ error }}
-        {% endfor %}
-        {% endif %}<br>
-      {{ form.submit }}
-    </form>
-    <br>
-</div>
-            </code></pre></p>
-          </section>
-        </section>
-        <section>
-          <section>
-            <h2>Authorization</h2>
-            <img data-src="link-banned.png" />
-          </section>
-          <section>
-            <h2>flask-principal</h2>
-            <p><pre><code data-trim>pip install flask-principal</code></pre></p>
-          </section>
-          <section>
-            <h2>__init__.py</h2>
-            <p>
-            <pre><code data-trim>
-from flask.ext.principal import Principal
-
-principal = Principal()
-
-
-def create_app(config_name):
-    principal.init_app(app)
-            </code></pre>
-            </p>
-          </section>
-          <section>
-            <h2>models.py</h2>
-            <p>
-            <pre><code data-trim>
-roles_users = db.Table('roles_users',
-                       db.Column('user_id', db.Integer(),
-                                 db.ForeignKey('users.user_id')),
-                       db.Column('role_id', db.Integer(),
-                                 db.ForeignKey('roles.id')))
-
-
-class Role(db.Model):
-    __tablename__ = 'roles'
-
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
-    description = db.Column(db.String(255))
-            </code></pre>
-            </p>
-          </section>
-          <section>
-            <h2>models.py - User Class</h2>
-            <p>
-            <pre><code data-trim>
-class User(db.Model, UserMixin):
-    roles = db.relationship('Role', secondary=roles_users,
-                            primaryjoin=user_id == roles_users.c.user_id,
-                            backref='users')
-            </code></pre>
-            </p>
-          </section>
-          <section>
-            <h2>models.py - Identity loader</h2>
-            <p>
-            <pre><code data-trim>
-@identity_loaded.connect
-def on_identity_loaded(sender, identity):
-    # Set the identity user object
-    identity.user = current_user
-
-    # Add the UserNeed to the identity
-    if hasattr(current_user, 'id'):
-        identity.provides.add(UserNeed(current_user.id))
-
-    # Assuming the User model has a list of roles, update the
-    # identity with the roles that the user provides
-    if hasattr(current_user, 'roles'):
-        for role in current_user.roles:
-            identity.provides.add(RoleNeed(role.name))
-            </code></pre>
-            </p>
-          </section>
-          <section>
-            <h2>auth/views.py</h2>
-            <p><pre><code data-trim>
-from flask import current_app
-
-from flask.ext.principal import identity_changed, Identity
-
-
-@auth.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user is not None and user.verify_password(form.password.data):
-            login_user(user)
-            identity_changed.send(current_app._get_current_object(),
-                                  identity=Identity(user.user_id))
-            next = request.args.get('next')
-            return redirect(next or url_for('main.index'))
-        else:
-            flash('Wrong username or password.')
-    return render_template('auth/login.html', form=form)
-            </code></pre></p>
-          </section>
-          <section>
-            <h2>auth/__init__.py</h2>
-            <p><pre><code data-trim>
-from flask.ext.principal import Permission, RoleNeed
-
-admin_permission = Permission(RoleNeed('admin'))
-            </code></pre></p>
-          </section>
-          <section>
-            <h2>main/views.py</h2>
-            <p><pre><code data-trim>
-from flaskfilled.auth import admin_permission
-
-@main.route('/settings', methods=['GET'])
-@admin_permission.require()
-def settings():
-    return render_template('main/settings.html')
-            </code></pre></p>
-          </section>
-          <section>
-            <img data-src="perm_denied.png" />
-          </section>
-          <section>
-            <img data-src="settings.png" />
-          </section>
-        </section>
-        <section>
-          <h2>Sending Mail</h2>
-          <img data-src="mail.png" />
-        </section>
-        <section>
-          <section>
-          <h2>flask-mail</h2>
-          <ul>
-            <li>Works with Flask config</li>
-            <li>Simplies Message Construction</li>
-          </ul>
-          </section>
-          <section>
-            <h2>__init__.py</h2>
-            <p><pre><code data-trim>
-from flask.ext.mail import Mail
-mail = Mail()
-
-
-def create_app(config_name):
-    mail.init_app(app)
-            </code></pre> </p>
-          </section>
-          <section>
-            <h2>__init__.py</h2>
-            <p><pre><code data-trim>
-from flask.ext.mail import Mail
-mail = Mail()
-
-
-def create_app(config_name):
-    mail.init_app(app)
-            </code></pre> </p>
-          </section>
-          <section>
-            <h2>main/views.py</h2>
-            <pre><code data-trim>
-from flask_mail import Message
-
-
-@main.route('/mailme', methods=['GET'])
-def mail():
-    msg = Message('COOKIES!',
-                  sender='from@example.com',
-                  recipients=['to@example.com'])
-    msg.body = 'There all mine!'
-    msg.html = '<b>There all mine!</b>'
-    mail.send(msg)
+('cookiemon', 1)
             </code></pre>
           </section>
         </section>
         <section>
           <h2>What other things are out there?</h2>
           <ul>
-            <li>flask-security</li>
-            <li>flask-moment</li>
+            <li>Automap</li>
+            <li>Geospatial Queries</li>
           </ul>
-          <p>https://github.com/humiaozuzu/awesome-flask</p>
-        </section>
-        <section>
-          <img data-src="flask-filled.jpg" height=500px />
         </section>
         <section>
           <h2>Questions</h2>
           <p>Jason Myers / @jasonamyers / Essential SQLAlchemy<br>
-          <img data-src="questions.jpg" />
+          <img data-src="over.jpg" />
         </section>
 			</div>
 
