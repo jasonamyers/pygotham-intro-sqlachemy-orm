@@ -206,8 +206,8 @@ print(cookies)
           <section>
             <h2>All the COOKIES! - Iterator</h2>
             <pre><code data-trim>
-cookies = session.query(Cookie).all()
-print(cookies)
+for cookie in session.query(Cookie):
+    print(cookie)
 
 Cookie(cookie_name='chocolate chip',
         cookie_recipe_url='http://some.aweso.me/cookie/recipe.html',
