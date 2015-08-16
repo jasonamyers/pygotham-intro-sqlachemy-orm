@@ -87,6 +87,15 @@ Session = sessionmaker(bind=engine)
 
 session = Session()
             </code></pre>
+            <aside class="notes">
+              The session is the way SQLAlchemy ORM interacts with the database. It wraps a database
+              connection via an engine, and provides an identity map for objects that you load via the
+              session or associate with the session.
+              The identity map is a cache like data structure that
+              contains a unique list of objects determined by the object’s table and primary key.
+              A session also wraps a transaction, and that transaction will be open until the Session is
+              committed or rolled back
+            </aside>
           </section>
         </section>
 				<section>
@@ -118,6 +127,12 @@ class Cookie(Base):
     quantity = Column(Integer())
     unit_cost = Column(Numeric(12, 2))
             </code></pre>
+            <aside class="notes">
+              Inherit from the declarative_base
+              Contain __tablename__
+              Contain 1+ columns
+              Have a primary key
+            </aside>
 					</section>
           <section>
             <h2>Persisting our Table</h2>
@@ -150,6 +165,20 @@ session.commit()
             </code></pre>
           </section>
           <section>
+            <h2>What happened on the Database</h2>
+            <pre><code data-trim>
+INFO:sqlalchemy.engine.base.Engine:BEGIN (implicit)
+
+INFO:sqlalchemy.engine.base.Engine:INSERT INTO cookies (cookie_name,
+cookie_recipe_url, cookie_sku, quantity, unit_cost) VALUES (?, ?, ?, ?, ?)
+
+INFO:sqlalchemy.engine.base.Engine:('chocolate chip',
+'http://some.aweso.me/cookie/recipe.html', 'CC01', 12, 0.5)
+
+INFO:sqlalchemy.engine.base.Engine:COMMIT
+            </code></pre>
+          </section>
+          <section>
             <h2>Accessing Attributes</h2>
             <pre><code data-trim>
 print(cc_cookie.cookie_id)
@@ -179,6 +208,13 @@ session.commit()
             <pre><code data-trim>
 c1.cookie_id
             </code></pre>
+            <aside class="notes">
+              Speed with tradeoff
+              - Relationships are not respected
+              - Objects are not connected to the session
+              - Primary Keys not fetched
+              - No events triggered
+            </aside>
           </section>
         </section>
         <section>
@@ -266,6 +302,10 @@ print(inv_count)
 
 136
             </code></pre>
+            <aside class="notes">
+Returns the first element of the first result, None if there is no result, or
+an error if there is more than one result.
+            </aside>
           </section>
           <section>
             <h2>Database Functions Count</h2>
@@ -318,6 +358,11 @@ for record in query:
 
 chocolate chip
             </code></pre>
+            <aside class="notes">
+ClauseElements are just an entity we use in a clause, and they are typically columns in
+a table; however, unlike columns, ClauseElements come with many additional capabil‐
+ities.
+            </aside>
           </section>
           <section>
             <h2>ClauseElement Methods</h2>
@@ -401,6 +446,10 @@ print(dcc_cookie)
 
 None
             </code></pre>
+            <aside class="notes">
+              queries all the rows, and raises an exception if anything other than a single
+              result is returned
+            </aside>
           </section>
         </section>
         <section>
@@ -549,6 +598,7 @@ for row in query:
         <section>
           <h2>Questions</h2>
           <p>Jason Myers / @jasonamyers / Essential SQLAlchemy<br>
+          http://bit.ly/jam-sqlalchemy-orm
           <img data-src="over.jpg" />
         </section>
 			</div>
